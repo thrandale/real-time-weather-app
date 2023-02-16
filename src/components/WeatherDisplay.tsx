@@ -33,7 +33,6 @@ function WeatherDisplay(): JSX.Element {
   // Get the weather for the selected zone
   const getWeather = async (zone: Zone) => {
     const weather = await WeatherAPI.getWeather(zone.id);
-    console.log(weather);
     setWeather(weather);
     setExpanded(weather.map(() => false));
   };
@@ -43,6 +42,16 @@ function WeatherDisplay(): JSX.Element {
     setZone(zone);
     setScreen('weather-display');
   };
+
+  // update the weather every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (zone.id !== undefined) {
+        getWeather(zone);
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [zone]);
 
   // When the zone changes, get the weather for that zone
   useEffect(() => {
