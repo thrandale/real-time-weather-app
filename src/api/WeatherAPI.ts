@@ -1,3 +1,8 @@
+/**
+ * This file contains the API calls for the weather data
+ * The API is documented here: https://www.weather.gov/documentation/services-web-api
+ * */
+
 export interface WeatherPeriod {
   number: number;
   name: string;
@@ -12,6 +17,11 @@ export interface Zone {
 }
 
 class WeatherAPI {
+  /**
+   * Get the weather forecast for a given zone
+   * @param zone The zone to get the forecast for
+   * @returns An array of weather periods
+   * */
   static async getWeather(zone: string): Promise<WeatherPeriod[]> {
     const response = await fetch(
       `https://api.weather.gov/zones/land/${zone}/forecast`
@@ -27,6 +37,7 @@ class WeatherAPI {
       const highTempMatch = period.detailedForecast.match(highTempRegex);
       const lowTempMatch = period.detailedForecast.match(lowTempRegex);
 
+      // Clean up the temperature strings
       const highTemp = highTempMatch
         ? (highTempMatch[1] + (highTempMatch[2] || '')).replace('zero', '0')
         : '';
@@ -46,6 +57,11 @@ class WeatherAPI {
     return periods;
   }
 
+  /**
+   * Get the zones for a given area
+   * @param area The area to get the zones for
+   * @returns An array of zones
+   * */
   static async getZone(area: string): Promise<Zone[]> {
     const response = await fetch(
       `https://api.weather.gov/zones?area=${area}&type=land`
