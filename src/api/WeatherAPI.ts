@@ -26,32 +26,53 @@ class WeatherAPI {
     const response = await fetch(
       `https://api.weather.gov/zones/land/${zone}/forecast`
     );
+
+    if (!response.ok) {
+      return [];
+    }
+
     const data = await response.json();
 
     // Regex to extract the high and low temperatures from the detailed forecast
-    const highTempRegex = /[H|h]igh[\s\w]+?(\d+s?|zero)(\s+to\s+\d+|zero)?\b/;
-    const lowTempRegex = /[L|l]ow[\s\w]+?(\d+s?|zero)(\s+to\s+\d+|zero)?\b/;
+    const highTempRegex = /[H|h]igh?[\s\w]+?(\d+s?|zero)(\s+to\s+\d+|zero)?\b/;
+    const lowTempRegex = /[L|l]ow?[\s\w]+?(\d+s?|zero)(\s+to\s+\d+|zero)?\b/;
+    const constTempRegex =
+      /temperature[\s\w]+?(\d+s?|zero)(\s+to\s+\d+|zero)?\b/;
 
     // Map the periods to a more usable format
     const periods = data.properties.periods.map((period: any) => {
       const highTempMatch = period.detailedForecast.match(highTempRegex);
       const lowTempMatch = period.detailedForecast.match(lowTempRegex);
+      const constTempMatch = period.detailedForecast.match(constTempRegex);
 
-      // Clean up the temperature strings
-      const highTemp = highTempMatch
-        ? (highTempMatch[1] + (highTempMatch[2] || '')).replace('zero', '0')
-        : '';
-      const lowTemp = lowTempMatch
-        ? (lowTempMatch[1] + (lowTempMatch[2] || '')).replace('zero', '0')
-        : '';
-
-      return {
-        number: period.number,
-        name: period.name,
-        detailedForecast: period.detailedForecast,
-        high: highTemp,
-        low: lowTemp,
-      };
+      // If there is a constant temperature, use that instead of the high/low
+      if (constTempMatch && !highTempMatch && !lowTempMatch) {
+        const temp = this.cleanTemperature(
+          constTempMatch[1] + (constTempMatch[2] || '')
+        );
+        return {
+          number: period.number,
+          name: period.name,
+          detailedForecast: period.detailedForecast,
+          high: temp,
+          low: temp,
+        };
+      } else {
+        const highTemp = highTempMatch
+          ? this.cleanTemperature(highTempMatch[1] + (highTempMatch[2] || ''))
+          : '';
+        const lowTemp =
+          lowTempMatch && !highTempMatch
+            ? this.cleanTemperature(lowTempMatch[1] + (lowTempMatch[2] || ''))
+            : '';
+        return {
+          number: period.number,
+          name: period.name,
+          detailedForecast: period.detailedForecast,
+          high: highTemp,
+          low: lowTemp,
+        };
+      }
     });
 
     return periods;
@@ -74,6 +95,10 @@ class WeatherAPI {
       };
     });
     return counties;
+  }
+
+  private static cleanTemperature(temp: string): string {
+    return temp.replace('zero', '0');
   }
 }
 
