@@ -18,7 +18,6 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
   return <IconButton {...other} />;
 })(({ theme, expand }) => ({
   transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
-  marginLeft: 'auto',
   transition: theme.transitions.create('transform', {
     duration: theme.transitions.duration.shortest,
   }),
@@ -79,7 +78,7 @@ function WeatherDisplay(): JSX.Element {
         <LocationPicker onGetWeather={onGetWeather} />
       )}
       {screen === 'weather-display' && (
-        <div>
+        <div className="weather-display-content">
           <div className="zone">
             <h2>Location: {zone.name}</h2>
             <Button
@@ -93,28 +92,35 @@ function WeatherDisplay(): JSX.Element {
           </div>
 
           <div className="weather">
+            {weather.length === 0 && <h3>No weather data available</h3>}
             {weather.map((period) => (
-              <Card className="weather-period" key={period.name}>
+              <Card
+                className="weather-period"
+                key={period.name}
+                variant="outlined"
+              >
                 <CardContent className="weather-period-content">
-                  <h3>{period.name}</h3>
-                  {period.high !== '' && (
-                    <div className="temperature">
-                      <ArrowDropUpIcon
-                        className="weather-icon"
-                        style={{ color: 'red' }}
-                      />
-                      {period.high}
-                    </div>
-                  )}
-                  {period.low !== '' && (
-                    <div className="temperature">
-                      {period.low}
-                      <ArrowDropDownIcon
-                        className="weather-icon"
-                        style={{ color: 'blue' }}
-                      />
-                    </div>
-                  )}
+                  <h3 style={{ textAlign: 'left' }}>{period.name}</h3>
+                  <div className="temp-section">
+                    {period.high !== '' && (
+                      <div className="temperature">
+                        <ArrowDropUpIcon
+                          className="weather-icon"
+                          style={{ color: 'red' }}
+                        />
+                        {period.high}
+                      </div>
+                    )}
+                    {period.low !== '' && (
+                      <div className="temperature">
+                        {period.high !== period.low && period.low}
+                        <ArrowDropDownIcon
+                          className="weather-icon"
+                          style={{ color: 'blue' }}
+                        />
+                      </div>
+                    )}
+                  </div>
                   <ExpandMore
                     expand={expanded[weather.indexOf(period)]}
                     onClick={() => handleExpandClick(period)}
